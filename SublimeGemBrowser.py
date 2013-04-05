@@ -17,7 +17,20 @@ class ListGemsCommand(sublime_plugin.WindowCommand):
     GEMS_NOT_FOUND = 'Gems Not Found'
 
     def run(self):
-        output = self.run_subprocess("bundle list")
+        try:
+          rvmrc_file = open('./.rvmrc')
+          # searches the .rvmrc file to find ruby-version@gemset
+          self.gemset_id = re.search('environment_id="(.*)"', rvmrc_file.read()).groups()[0]
+          rvmrc_file.close()
+
+          # uses the custom rvm bundle command
+          self.bundle = "rvm %s do bundle" % self.gemset_id
+        except e:
+          # if somethings goes wrong, uses the bundle command
+          self.bundle = 'bundle'
+
+        # calling bundle command separated from actions (in case, 'list')
+        output = self.run_subprocess(self.bundle + " list")
         if output != None:
           gems = []
           for line in output.split('\n'):
@@ -36,7 +49,10 @@ class ListGemsCommand(sublime_plugin.WindowCommand):
     def on_done(self, picked):
         if self.gem_list[picked] != self.GEMS_NOT_FOUND and picked != -1:
             gem_name = re.search(self.PATTERN_GEM_NAME,self.gem_list[picked]).group(1)
-            output = self.run_subprocess("bundle show " + gem_name)
+            # calling custom bundle command
+            output = self.run_subprocess(self.bundle + " show " + gem_name)
+            # removes a text that rvm shows (Using: [path to gemset])
+            output = string.replace(output[output.find(self.gemset_id)+len(self.gemset_id):-1], "\n", '')
             if output != None:
                 self.sublime_command_line(['-n', output.rstrip()])
 
