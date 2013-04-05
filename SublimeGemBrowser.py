@@ -18,7 +18,7 @@ class ListGemsCommand(sublime_plugin.WindowCommand):
 
     def run(self):
         try:
-          rvmrc_file = open('./.rvmrc')
+          rvmrc_file = open(os.path.join(self.gemfile_folder(), '.rvmrc'))
           # searches the .rvmrc file to find ruby-version@gemset
           self.gemset_id = re.search('environment_id="(.*)"', rvmrc_file.read()).groups()[0]
           rvmrc_file.close()
@@ -51,10 +51,11 @@ class ListGemsCommand(sublime_plugin.WindowCommand):
             gem_name = re.search(self.PATTERN_GEM_NAME,self.gem_list[picked]).group(1)
             # calling custom bundle command
             output = self.run_subprocess(self.bundle + " show " + gem_name)
-            # removes a text that rvm shows (Using: [path to gemset])
-            output = string.replace(output[output.find(self.gemset_id)+len(self.gemset_id):-1], "\n", '')
             if output != None:
-                self.sublime_command_line(['-n', output.rstrip()])
+              if output.startswith('Using:'):
+                # removes a text that rvm shows (Using: [path to gemset])
+                output = string.replace(output[output.find(self.gemset_id)+len(self.gemset_id):-1], "\n", '')
+              self.sublime_command_line(['-n', output.rstrip()])
 
     def get_sublime_path(self):
         if sublime.platform() == 'osx':
