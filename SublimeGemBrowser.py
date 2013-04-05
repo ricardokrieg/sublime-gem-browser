@@ -6,6 +6,7 @@ import subprocess
 import re
 import sys
 import fnmatch
+import string
 
 class ListGemsCommand(sublime_plugin.WindowCommand):
     """
@@ -14,8 +15,8 @@ class ListGemsCommand(sublime_plugin.WindowCommand):
     PATTERN_GEM_VERSION = "\* (.*)"
     PATTERN_GEM_NAME = "(.*)\("
     GEMS_NOT_FOUND = 'Gems Not Found'
-    
-    def run(self):        
+
+    def run(self):
         output = self.run_subprocess("bundle list")
         if output != None:
           gems = []
@@ -31,13 +32,13 @@ class ListGemsCommand(sublime_plugin.WindowCommand):
           self.window.show_quick_panel(self.gem_list, self.on_done)
         else:
           sublime.error_message('Error getting the output, the shell could probably not be loaded or There are no Gemfile in this project.')
-    
+
     def on_done(self, picked):
         if self.gem_list[picked] != self.GEMS_NOT_FOUND and picked != -1:
             gem_name = re.search(self.PATTERN_GEM_NAME,self.gem_list[picked]).group(1)
             output = self.run_subprocess("bundle show " + gem_name)
             if output != None:
-                self.sublime_command_line(['-n', output.rstrip()]) 
+                self.sublime_command_line(['-n', output.rstrip()])
 
     def get_sublime_path(self):
         if sublime.platform() == 'osx':
@@ -54,7 +55,7 @@ class ListGemsCommand(sublime_plugin.WindowCommand):
         # Search for RVM
         shell_process = subprocess.Popen(" if [ -f $HOME/.rvm/bin/rvm-shell ]; then echo $HOME/.rvm/bin/rvm-shell; fi", stdout=subprocess.PIPE, shell=True)
         rvm_executable = shell_process.communicate()[0].rstrip()
-        
+
         if rvm_executable != '':
             process = subprocess.Popen(command_with_cd, stdout=subprocess.PIPE, shell=True, executable= rvm_executable)
             return process.communicate()[0]
