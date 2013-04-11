@@ -25,7 +25,7 @@ class ListGemsCommand(sublime_plugin.WindowCommand):
 
           # uses the custom rvm bundle command
           self.bundle = "rvm %s do bundle" % self.gemset_id
-        except e:
+        except Exception as e:
           # if somethings goes wrong, uses the bundle command
           self.bundle = 'bundle'
 
